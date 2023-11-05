@@ -27,14 +27,10 @@ public class Application extends PanacheEntityBase implements Validatable {
     private String name;
 
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Subscriber> subscribers;
-
-    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Deployment> deployments;
 
     @Override
     public void validate() {
-        subscribers.forEach(Subscriber::validate);
         deployments.forEach(Deployment::validate);
     }
 

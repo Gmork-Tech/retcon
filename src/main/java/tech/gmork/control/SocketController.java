@@ -16,7 +16,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import tech.gmork.model.entities.Application;
-import tech.gmork.model.entities.Subscriber;
+import tech.gmork.model.dtos.Subscriber;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +28,7 @@ import static tech.gmork.model.events.InternalEvents.NEW_SUBSCRIBER_EVENT;
 public class SocketController {
 
     private static final Logger logger = Logger.getLogger(SocketController.class);
-    private static final Map<UUID, Set<Session>> sessions = new ConcurrentHashMap<>();
+    private static final Map<UUID, Set<Subscriber>> appSubscriberMap = new ConcurrentHashMap<>();
 
     @Inject
     EventBus bus;
@@ -41,11 +41,9 @@ public class SocketController {
             logger.warn("A client attempted to open a connection with an invalid application ID.");
             throw new WebApplicationException("Please provide a valid uuid.", Response.Status.BAD_REQUEST);
         }
-        var sub = new Subscriber();
-        sub.setId(session.getId());
-        sub.setApplication(maybeApp.get());
-        sub.persistAndFlush();
-        sessions.computeIfAbsent(id, uid -> new HashSet<>()).add(session);
+
+        var sub = Subscriber.fromSession(session);
+        appSubscriberMap.computeIfAbsent(id, uid -> new HashSet<>()).add(sub);
         bus.publish(NEW_SUBSCRIBER_EVENT, sub);
         logger.info("Opened websocket session for application id: " + maybeApp.get().getName());
     }
@@ -53,7 +51,8 @@ public class SocketController {
     @OnClose
     public void onClose(Session session, @PathParam("id") UUID id) {
         logger.info("onClose> " + id);
-        Subscriber.deleteById(session.getId());
+        var subs = appSubscriberMap.get(id);
+
     }
 
     @OnError
@@ -68,8 +67,9 @@ public class SocketController {
 
 
     private void onAppChange(Application app) {
+
         // Nothing to do if no one is listening
-        if (app.getSubscribers() == null || app.getSubscribers().isEmpty()) {
+        if (appSubscriberMap.get(app.getId()) == null || appSubscriberMap.get(app.getId()).isEmpty()) {
             return;
         }
         // Nothing to do if no deployments defined
@@ -77,12 +77,13 @@ public class SocketController {
             return;
         }
         app.getDeployments().forEach(deployment -> {
+            // Determine if we are dealing with simple config props or not.
             if (!deployment.getKind().isDependent()) {
-                app.getSubscribers().forEach(subscriber -> {
+                // If so, push the props to every consumer
+                appSubscriberMap.get(app.getId()).forEach(subscriber -> {
 
                 });
-            }
-            else {
+            } else {
 
             }
         });
