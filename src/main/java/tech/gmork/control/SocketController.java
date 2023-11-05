@@ -28,7 +28,7 @@ import static tech.gmork.model.events.InternalEvents.NEW_SUBSCRIBER_EVENT;
 public class SocketController {
 
     private static final Logger logger = Logger.getLogger(SocketController.class);
-    private static final Map<UUID, Session> sessions = new ConcurrentHashMap<>();
+    private static final Map<UUID, Set<Session>> sessions = new ConcurrentHashMap<>();
 
     @Inject
     EventBus bus;
@@ -45,6 +45,7 @@ public class SocketController {
         sub.setId(session.getId());
         sub.setApplication(maybeApp.get());
         sub.persistAndFlush();
+        sessions.computeIfAbsent(id, uid -> new HashSet<>()).add(session);
         bus.publish(NEW_SUBSCRIBER_EVENT, sub);
         logger.info("Opened websocket session for application id: " + maybeApp.get().getName());
     }
