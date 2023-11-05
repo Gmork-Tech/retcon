@@ -8,7 +8,7 @@ RetCon is written in Java and based on the Quarkus framework. It is licensed und
 The term "RetCon" is short for retroactive continuity and is usually used to describe the act of changing a story or plot point after the publishing of some original media. The goal of this project is to allow for the changing of simple configuration parameters across an array of different applications, after the applications have been published to their respective runtime environment, without requiring redeployment or restarting.
 
 ## Project Goals
-This project aims to provide an all-in-one solution for managing runtime feature flags as well as simple non-sensitive configuration parameters. It is designed to be self-contained, requiring only a small amount of persistent storage to hold a local SQLite database, however it could be configured with an external SQL database instead.
+This project aims to provide an all-in-one solution for managing runtime feature flags as well as simple non-sensitive configuration parameters. It is designed to be self-contained, requiring only a small amount of persistent storage to hold an embedded H2 database, however it could be configured with an external SQL database instead.
 
 Configuration changes are pushed to clients via websocket so that client polling is not needed.
 

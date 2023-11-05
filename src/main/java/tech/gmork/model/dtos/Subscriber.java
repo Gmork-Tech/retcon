@@ -7,12 +7,15 @@ import lombok.Data;
 
 import tech.gmork.model.Validatable;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Subscriber implements Validatable {
     private Session session;
-    private boolean inSync = false;
+    private Map<Long, Long> versionedDeployments = new ConcurrentHashMap<>();
     private String hostName;
     private String ipAddress;
 
