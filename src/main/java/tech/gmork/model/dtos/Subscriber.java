@@ -1,5 +1,6 @@
 package tech.gmork.model.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.websocket.Session;
@@ -22,6 +23,11 @@ public class Subscriber implements Validatable {
     @Override
     public void validate() {
 
+    }
+
+    @JsonIgnore
+    public String getId() {
+        return session.getId();
     }
 
     public static Subscriber fromSession(Session session) {
