@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.*;
@@ -25,7 +26,9 @@ import java.util.Set;
 @DiscriminatorColumn(name="kind", discriminatorType = DiscriminatorType.STRING)
 public abstract class Deployment extends PanacheEntityBase {
 
-    private static final ObjectMapper mapper = JsonMapper.builder().build();
+    private static final ObjectMapper mapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .build();
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
