@@ -1,11 +1,9 @@
 package tech.gmork.control;
 
 import io.quarkus.logging.Log;
-import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnError;
 import jakarta.websocket.OnMessage;
@@ -20,8 +18,6 @@ import tech.gmork.model.dtos.Subscriber;
 
 import java.util.*;
 
-import static tech.gmork.model.events.InternalEvents.NEW_SUBSCRIBER_EVENT;
-
 @ServerEndpoint("/ws/{id}")
 @ApplicationScoped
 public class SocketController {
@@ -30,34 +26,36 @@ public class SocketController {
     EventBus bus;
 
     @OnOpen
-    @Transactional
     public void onOpen(Session session, @PathParam("id") String id) {
         var uuid = tryParse(id);
-        var maybeApp = Application.<Application>findByIdOptional(uuid);
-        if (maybeApp.isEmpty()) {
-            Log.warn("A client attempted to open a connection with an invalid application ID.");
-            throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST);
-        }
 
-        var sub = Subscriber.fromSession(session);
-        maybeApp.get().addSubscriber(sub);
-        Log.info("Opened websocket session for application id: " + maybeApp.get().getName());
-        // Publish a message on the event bus to trigger initial config send
-        bus.publish(NEW_SUBSCRIBER_EVENT, sub);
+        Application.<Application>findByIdOptional(uuid).ifPresentOrElse(app -> {
+            var sub = Subscriber.fromSession(session);
+            app.addSubscriber(sub);
+            app.getDeployments().forEach(deployment -> deployment.deploy()
+                    .subscribe()
+                    .with(dep -> Log.info("Subscriber onOpen event triggered successful evaluation of deployment " +
+                            deployment.getName() + " for application " + app.getName()),
+                            fail -> Log.warn("Subscriber onOpen event failed evaluation of deployment " +
+                                    deployment.getName() + " for application " + app.getName(), fail)));
+            }, () -> { throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST); }
+        );
     }
 
     @OnClose
     public void onClose(Session session, @PathParam("id") String id) {
         var uuid = tryParse(id);
         var subId = session.getId();
-        var maybeApp = Application.<Application>findByIdOptional(uuid);
-        if (maybeApp.isEmpty()) {
-            Log.warn("A client attempted to close a connection with an invalid application ID.");
-            throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST);
-        }
-        maybeApp.get().removeSubscriberById(subId);
-        // Log the action
-        Log.info("Closed a connection with a subscriber for app id: " + uuid);
+        Application.<Application>findByIdOptional(uuid).ifPresentOrElse(app -> {
+            app.removeSubscriberById(subId);
+            app.getDeployments().forEach(deployment -> deployment.deploy()
+                    .subscribe()
+                    .with(dep -> Log.info("Subscriber onClose event triggered successful evaluation of deployment " +
+                                    deployment.getName() + " for application " + app.getName()),
+                            fail -> Log.warn("Subscriber onClose event failed evaluation of deployment " +
+                                    deployment.getName() + " for application " + app.getName(), fail)));
+            }, () -> { throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST); }
+        );
     }
 
     @OnError
@@ -68,11 +66,6 @@ public class SocketController {
     @OnMessage
     public void onMessage(String message, @PathParam("id") String id) {
         Log.info("onMessage> " + id + ": " + message);
-    }
-
-    @ConsumeEvent(value = NEW_SUBSCRIBER_EVENT, blocking = true)
-    public void onNewSubscriber(Subscriber subscriber) {
-
     }
 
     private UUID tryParse(String id) {

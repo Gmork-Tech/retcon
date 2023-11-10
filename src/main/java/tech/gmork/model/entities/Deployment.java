@@ -1,38 +1,44 @@
 package tech.gmork.model.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.annotation.*;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import tech.gmork.model.dtos.Subscriber;
+import org.quartz.Job;
+import tech.gmork.model.Validatable;
+import tech.gmork.model.entities.deployment.*;
+import tech.gmork.model.enums.DeploymentStrategy.Values;
+import tech.gmork.model.helper.QuartzJob;
 
+import java.util.Optional;
 import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = FullDeployment.class, name = Values.FULL),
+        @JsonSubTypes.Type(value = ByQuantityDeployment.class, name = Values.BY_QUANTITY),
+        @JsonSubTypes.Type(value = ByPercentDeployment.class, name = Values.BY_PERCENTAGE),
+        @JsonSubTypes.Type(value = PartialManualDeployment.class, name = Values.MANUAL)
+})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="kind", discriminatorType = DiscriminatorType.STRING)
-public abstract class Deployment extends PanacheEntityBase {
-
-    private static final ObjectMapper mapper = JsonMapper.builder()
-            .addModule(new JavaTimeModule())
-            .build();
+public abstract class Deployment extends PanacheEntityBase implements Validatable, Job {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     private String name;
 
@@ -44,8 +50,8 @@ public abstract class Deployment extends PanacheEntityBase {
     @JoinColumn(name = "applicationId")
     private Application application;
 
-    public abstract Uni<Void> deploy(Set<Subscriber> subscribers);
+    public abstract Uni<Void> deploy();
 
-    public abstract void validate();
+    public abstract Optional<QuartzJob> schedule();
 
 }

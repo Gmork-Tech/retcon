@@ -3,17 +3,23 @@ package tech.gmork.model.entities.deployment;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import tech.gmork.model.Validatable;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
+import tech.gmork.model.helper.QuartzJob;
 
+import java.util.Optional;
 import java.util.Set;
 
 @Entity
-@DiscriminatorValue(DeploymentStrategy.Values.PARTIAL_BY_USER_DEFINED_HOST_IDS)
+@EqualsAndHashCode(callSuper = true)
+@DiscriminatorValue(DeploymentStrategy.Values.MANUAL)
 public class PartialManualDeployment extends Deployment {
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -25,7 +31,16 @@ public class PartialManualDeployment extends Deployment {
     }
 
     @Override
-    public Uni<Void> deploy(Set<Subscriber> subscribers) {
+    public Uni<Void> deploy() {
         return null;
     }
+
+    @Override
+    public Optional<QuartzJob> schedule() {
+        return Optional.empty();
+    }
+
+    @Override
+    public void execute(JobExecutionContext jobExecutionContext) {}
+
 }

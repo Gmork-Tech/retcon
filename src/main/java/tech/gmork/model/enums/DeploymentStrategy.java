@@ -2,12 +2,10 @@ package tech.gmork.model.enums;
 
 // Use enum with value for discriminator column, inspired by: https://stackoverflow.com/a/26719904/3019198
 public enum DeploymentStrategy {
-    ALL_AT_ONCE(Values.ALL_AT_ONCE),
-    PARTIAL_BY_PERCENTAGE(Values.PARTIAL_BY_PERCENTAGE),
-    PARTIAL_BY_QUANTITY(Values.PARTIAL_BY_QUANTITY),
-    PARTIAL_BY_USER_DEFINED_HOST_IDS(Values.PARTIAL_BY_USER_DEFINED_HOST_IDS),
-    ALL_GRADUAL_BY_PERCENTAGE(Values.ALL_GRADUAL_BY_PERCENTAGE),
-    ALL_GRADUAL_BY_QUANTITY(Values.ALL_GRADUAL_BY_QUANTITY);
+    FULL(Values.FULL),
+    MANUAL(Values.MANUAL),
+    BY_PERCENTAGE(Values.BY_PERCENTAGE),
+    BY_QUANTITY(Values.BY_QUANTITY);
     private String value;
 
     DeploymentStrategy(String val) {
@@ -17,12 +15,10 @@ public enum DeploymentStrategy {
     }
 
     public static class Values {
-        public static final String ALL_AT_ONCE = "AAO";
-        public static final String PARTIAL_BY_PERCENTAGE = "PBP";
-        public static final String PARTIAL_BY_QUANTITY = "PBQ";
-        public static final String PARTIAL_BY_USER_DEFINED_HOST_IDS = "PBH";
-        public static final String ALL_GRADUAL_BY_PERCENTAGE = "AGP";
-        public static final String ALL_GRADUAL_BY_QUANTITY = "AGQ";
+        public static final String FULL = "full";
+        public static final String BY_PERCENTAGE = "percent";
+        public static final String BY_QUANTITY = "quantity";
+        public static final String MANUAL = "manual";
     }
 
 }

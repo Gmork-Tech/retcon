@@ -1,33 +1,37 @@
 package tech.gmork.model.dtos;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.websocket.Session;
+import lombok.AccessLevel;
 import lombok.Data;
-
-import tech.gmork.model.Validatable;
+import lombok.Setter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class Subscriber implements Validatable {
+public class Subscriber {
+
+    // This is the websocket session for the client
     private Session session;
-    private Map<Long, Long> versionedDeployments = new ConcurrentHashMap<>();
+
+    // Key is deployment id and value is hashcode of said deployment
+    @Setter(AccessLevel.NONE)
+    private Map<Long, Integer> versionedDeployments = new ConcurrentHashMap<>();
+
+    // Extra information the subscriber can provide after initial connection that allows for manual deployments
     private String hostName;
     private String ipAddress;
 
-    @Override
-    public void validate() {
-
-    }
-
-    @JsonIgnore
     public String getId() {
         return session.getId();
+    }
+
+    public void updateVersionedDeployment(long id, int hashcode) {
+        versionedDeployments.put(id, hashcode);
+    }
+
+    public void removeDeployment(long id) {
+        versionedDeployments.remove(id);
     }
 
     public static Subscriber fromSession(Session session) {
