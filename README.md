@@ -1,5 +1,7 @@
 # RetCon
 
+Note: RetCon is a work in progress and not yet complete. We are aiming for Q1 2024.
+
 ## About
 RetCon is an open source runtime configuration provider for backend web services.
 
