@@ -29,16 +29,22 @@ public class SocketController {
     public void onOpen(Session session, @PathParam("id") String id) {
         var uuid = tryParse(id);
 
-        Application.<Application>findByIdOptional(uuid).ifPresentOrElse(app -> {
-            var sub = Subscriber.fromSession(session);
-            app.addSubscriber(sub);
-            app.getDeployments().forEach(deployment -> deployment.deploy()
-                    .subscribe()
-                    .with(dep -> Log.info("Subscriber onOpen event triggered successful evaluation of deployment " +
-                            deployment.getName() + " for application " + app.getName()),
-                            fail -> Log.warn("Subscriber onOpen event failed evaluation of deployment " +
-                                    deployment.getName() + " for application " + app.getName(), fail)));
-            }, () -> { throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST); }
+        Application.<Application>findByIdOptional(uuid)
+                .ifPresentOrElse(app -> {
+                    var sub = Subscriber.fromSession(session);
+                    app.addSubscriber(sub);
+                    app.getDeployments().forEach(deployment -> deployment.deploy()
+                            .subscribe()
+                            .with(dep -> Log.info("Subscriber onOpen event triggered successful evaluation " +
+                                            "of deployment " + deployment.getName() + " for application " +
+                                            app.getName()),
+                                    fail -> Log.warn("Subscriber onOpen event failed evaluation " +
+                                            "of deployment " + deployment.getName() + " for application " +
+                                            app.getName(), fail)));
+                    },
+                () -> {
+                    throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST);
+                }
         );
     }
 
@@ -46,15 +52,21 @@ public class SocketController {
     public void onClose(Session session, @PathParam("id") String id) {
         var uuid = tryParse(id);
         var subId = session.getId();
-        Application.<Application>findByIdOptional(uuid).ifPresentOrElse(app -> {
-            app.removeSubscriberById(subId);
-            app.getDeployments().forEach(deployment -> deployment.deploy()
-                    .subscribe()
-                    .with(dep -> Log.info("Subscriber onClose event triggered successful evaluation of deployment " +
-                                    deployment.getName() + " for application " + app.getName()),
-                            fail -> Log.warn("Subscriber onClose event failed evaluation of deployment " +
-                                    deployment.getName() + " for application " + app.getName(), fail)));
-            }, () -> { throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST); }
+        Application.<Application>findByIdOptional(uuid)
+                .ifPresentOrElse(app -> {
+                    app.removeSubscriberById(subId);
+                    app.getDeployments().forEach(deployment -> deployment.deploy()
+                            .subscribe()
+                            .with(dep -> Log.info("Subscriber onClose event triggered successful evaluation " +
+                                            "of deployment " + deployment.getName() + " for application " +
+                                            app.getName()),
+                                    fail -> Log.warn("Subscriber onClose event failed evaluation " +
+                                            "of deployment " + deployment.getName() + " for application " +
+                                            app.getName(), fail)));
+                    },
+                () -> {
+                    throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST);
+                }
         );
     }
 

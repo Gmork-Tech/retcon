@@ -6,10 +6,8 @@ import jakarta.persistence.Entity;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import tech.gmork.model.dtos.Subscriber;
+
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
 import tech.gmork.model.helper.QuartzJob;

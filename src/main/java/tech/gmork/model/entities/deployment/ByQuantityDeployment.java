@@ -3,9 +3,12 @@ package tech.gmork.model.entities.deployment;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
 import org.quartz.*;
 
+import tech.gmork.model.entities.ConfigProp;
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
 import tech.gmork.model.helper.QuartzJob;
@@ -21,8 +24,9 @@ public class ByQuantityDeployment extends Deployment {
 
     private Instant lastDeployed;
     private Short incrementQuantity;
-    private Short initialQuantity;
-    private Duration incrementDelay;
+    private Short initialQuantity = 1;
+    private boolean shouldIncrement = false;
+    private Duration incrementDelay = Duration.ofMinutes(5);
     private Short targetQuantity;
     private boolean convertToFull = false;
 
@@ -52,7 +56,25 @@ public class ByQuantityDeployment extends Deployment {
 
     @Override
     public void validate() {
-
+        if (targetQuantity == null) {
+            throw new WebApplicationException("Quantity based deployments require a target deployment quantity.",
+                    Response.Status.BAD_REQUEST);
+        }
+        if (initialQuantity == null && shouldIncrement) {
+            throw new WebApplicationException("Quantity based deployments require an initial deployment " +
+                    "quantity, if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+        }
+        if (incrementDelay == null && shouldIncrement) {
+            throw new WebApplicationException("Quantity based deployments require an increment delay " +
+                    "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+        }
+        if (incrementQuantity == null && shouldIncrement) {
+            throw new WebApplicationException("Quantity based deployments require an increment quantity " +
+                    "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+        }
+        if (getProps() != null) {
+            getProps().forEach(ConfigProp::validate);
+        }
     }
 
     @Override

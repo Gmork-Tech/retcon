@@ -25,6 +25,8 @@ public class WebController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.WILDCARD)
     public Response updateApplication(Application app) {
+        // Start by validating the config
+        app.validate();
         return Response.ok().build();
     }
 

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -36,6 +38,9 @@ public class Application extends PanacheEntityBase implements Validatable {
 
     @Override
     public void validate() {
+        if (name == null) {
+            throw new WebApplicationException("Application must have a name", Response.Status.BAD_REQUEST);
+        }
         deployments.forEach(Deployment::validate);
     }
 
