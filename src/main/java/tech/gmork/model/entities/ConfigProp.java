@@ -1,8 +1,7 @@
 package tech.gmork.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.ws.rs.WebApplicationException;
@@ -19,8 +18,6 @@ import tech.gmork.model.enums.PropType;
 @Getter
 @Setter
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConfigProp extends PanacheEntityBase implements Validatable {
 
     @Id

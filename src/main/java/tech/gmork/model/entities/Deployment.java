@@ -30,8 +30,6 @@ import java.util.Set;
         @JsonSubTypes.Type(value = ByPercentDeployment.class, name = Values.BY_PERCENTAGE),
         @JsonSubTypes.Type(value = PartialManualDeployment.class, name = Values.MANUAL)
 })
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="kind", discriminatorType = DiscriminatorType.STRING)
 public abstract class Deployment extends PanacheEntityBase implements Validatable, Job {
