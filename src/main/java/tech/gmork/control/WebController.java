@@ -6,14 +6,16 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestQuery;
 import tech.gmork.model.dtos.ApplicationListResponse;
+import tech.gmork.model.dtos.UserListResponse;
 import tech.gmork.model.entities.Application;
+import tech.gmork.model.entities.User;
 
-@Path("/admin/applications")
+@Path("/admin")
 public class WebController {
 
     @GET
     @Blocking
-    @Path("/get")
+    @Path("/applications")
     @Produces(MediaType.APPLICATION_JSON)
     public ApplicationListResponse pageApplications(@RestQuery int pageNo) {
         return ApplicationListResponse.byPageNumber(pageNo);
@@ -21,12 +23,29 @@ public class WebController {
 
     @POST
     @Blocking
-    @Path("/update")
+    @Path("/applications/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.WILDCARD)
     public Response updateApplication(Application app) {
-        // Start by validating the config
         app.validate();
+        return Response.ok().build();
+    }
+
+    @GET
+    @Blocking
+    @Path("/users")
+    @Produces(MediaType.APPLICATION_JSON)
+    public UserListResponse pageUsers(@RestQuery int pageNo) {
+        return UserListResponse.byPageNumber(pageNo);
+    }
+
+    @POST
+    @Blocking
+    @Path("/users/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.WILDCARD)
+    public Response updateUser(User user) {
+        user.validate();
         return Response.ok().build();
     }
 
