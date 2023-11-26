@@ -1,6 +1,6 @@
 # RetCon
 
-Note: RetCon is a work in progress and not yet complete. We are aiming for Q1 2024.
+Note: RetCon is a work in progress and not yet complete. We are aiming for end of Q1 2024.
 
 ## About
 RetCon is an open source runtime configuration provider for backend web services.
@@ -12,7 +12,7 @@ The term "RetCon" is short for retroactive continuity and is usually used to des
 ## Project Goals
 This project aims to provide an all-in-one solution for managing runtime feature flags as well as simple non-sensitive configuration parameters. It is designed to be self-contained, requiring only a small amount of persistent storage to hold an embedded H2 database, however it could be configured with an external SQL database instead.
 
-Configuration changes are pushed to clients via websocket so that client polling is not needed.
+Configuration changes are pushed to clients via websocket so that client polling is not needed. Clients should cache configuration data such that integrating RetCon should not slow the performance of critical tasks that expect configuration to be readily available in memory.
 
 ## Cool Things You Can Do!
 Here's a quick list of cool things you can do with RetCon!
@@ -33,15 +33,24 @@ We don't want duplicate data, do we?
 
 You could use a centralized ACID compliant database to store your job and provide locks, but this doesn't guarantee that the same instance will always perform said job. If the job relies on local caching, having each instance take turns executing the job is going to be memory inefficient. 
 
-Enter RetCon! Simply tell RetCon you want the config
+What can you do? You have a service that it's going to take some serious work to horizontally scale in an effective manner that's not just increasing burn for minimal gain.
+
+Enter RetCon! Simply wrap your troublesome non-distributable code in an if statement and allow RetCon to provide a flag to tell the instance whether or not it should run a given job. In this way legacy code and code that causes problems with scaling, can easily be mitigated by a "single-instance" deployment. In a partial deployment denoted by quantity, RetCon will guarantee that exactly one instance receives your modified configuration.
 
 ### Canaries
-Let's say you've implemented
+Let's say you've implemented a new feature, and you're ready to roll it out to your 100 active service instances, and said feature relies on some configuration data. With RetCon's gradual deployments you could enable this feature for a subset of the whole, and even define the rate at which the deployment happens automatically. 
+For instance, with RetCon you could instantly forward this configuration change to 10 instances of 100 active instances, or 10% of 100 active instances (you can specify by quantity or by percentage). You could then define a delay with which to wait before rolling out the change to a different percentage/quantity of service instances.
+Lastly you could define a target percentage with which to stop this incrementing, and then opt to convert the deployment into a simple deployment (all new instances of your service get the configuration change immediately) or not.
+
+### A/B Testing
+Same as with canaries but with more targeting!
 
 ## Current Development Efforts
-- Create the base server and database structure
-- Create a simple frontend for managing the configuration server
+- Create a simple frontend for managing the configuration server (in progress)
 - Support simple deployment based canary testing
-- Support deploying single instance features
+- Add a priority system so users can define which deployments should overwrite previously cached values.
+- Support deploying "single instance" features
+- Figure out the best way to support multiple authentication schemes
+- Generate default Flyway migration scripts for more DBs than just H2 (probably need to use Java based migrations)
 - Log transactions made against the RetCon server
 - Create client libraries for Go, Java, JavaScript, C#, and Python (different repositories)

@@ -1,7 +1,6 @@
 package tech.gmork.model.entities;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.elytron.security.common.BcryptUtil;
