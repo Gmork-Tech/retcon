@@ -13,7 +13,7 @@ import tech.gmork.model.Validatable;
 
 @Entity
 @UserDefinition
-public class User extends PanacheEntity implements Validatable {
+public class LocalUser extends PanacheEntity implements Validatable {
     @Username
     public String username;
     @Password
@@ -28,7 +28,7 @@ public class User extends PanacheEntity implements Validatable {
      * @param role the comma-separated roles
      */
     public static void add(String username, String password, String role) {
-        User user = new User();
+        LocalUser user = new LocalUser();
         user.username = username;
         user.password = BcryptUtil.bcryptHash(password);
         user.role = role;

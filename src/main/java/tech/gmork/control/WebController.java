@@ -8,7 +8,7 @@ import org.jboss.resteasy.reactive.RestQuery;
 import tech.gmork.model.dtos.ApplicationListResponse;
 import tech.gmork.model.dtos.UserListResponse;
 import tech.gmork.model.entities.Application;
-import tech.gmork.model.entities.User;
+import tech.gmork.model.entities.LocalUser;
 
 @Path("/admin")
 public class WebController {
@@ -44,7 +44,7 @@ public class WebController {
     @Path("/users/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.WILDCARD)
-    public Response updateUser(User user) {
+    public Response updateUser(LocalUser user) {
         user.validate();
         return Response.ok().build();
     }

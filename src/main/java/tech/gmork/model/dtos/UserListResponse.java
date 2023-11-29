@@ -5,7 +5,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
 import org.eclipse.microprofile.config.ConfigProvider;
-import tech.gmork.model.entities.User;
+import tech.gmork.model.entities.LocalUser;
 
 import java.util.List;
 
@@ -14,12 +14,12 @@ public class UserListResponse {
 
     private static final int pageSize = ConfigProvider.getConfig().getValue("entities.default.page.size", int.class);
 
-    private List<User> users;
+    private List<LocalUser> users;
     private int totalPages;
 
     public static UserListResponse byPageNumber(int pageNo) {
         var res = new UserListResponse();
-        var query = User.findAll();
+        var query = LocalUser.findAll();
         query.page(Page.ofSize(pageSize));
         res.setTotalPages(query.pageCount());
         if (res.getTotalPages() < pageNo || pageNo < 1) {
