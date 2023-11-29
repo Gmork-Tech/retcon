@@ -2,6 +2,7 @@ package tech.gmork.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.ws.rs.WebApplicationException;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import tech.gmork.control.json.CustomJacksonMapper;
 import tech.gmork.model.Validatable;
 import tech.gmork.model.enums.PropType;
 
@@ -39,19 +41,59 @@ public class ConfigProp extends PanacheEntityBase implements Validatable {
     @Override
     public void validate() {
         switch (propType) {
-            case STRING -> {}
+            case STRING -> {
+                // Q: When is a string not a string?
+                // A: When it's a char!
+            }
             case NUMBER -> {
-                // TODO Add regex values and runtime type checking for configuration properties
-                if (!value.toString().matches("")) {
+                if (!value.toString().matches("[-+]?[0-9]*\\.?[0-9]+")) {
                     throw new WebApplicationException("Value for prop " + name + " in deployment " +
                             deployment.getName() + " of application " + deployment.getApplication().getName() +
                             " cannot be converted to a number.", Response.Status.BAD_REQUEST);
                 }
             }
-            case BOOLEAN -> {}
-            case TIMESTAMP -> {}
-            case OBJECT -> {}
-            case ARRAY -> {}
+            case BOOLEAN -> {
+                if (!value.toString().matches("(?i)(true|false|1|0)")) {
+                    throw new WebApplicationException("Value for prop " + name + " in deployment " +
+                            deployment.getName() + " of application " + deployment.getApplication().getName() +
+                            " cannot be converted to a boolean.", Response.Status.BAD_REQUEST);
+                }
+            }
+            case TIMESTAMP -> {
+                if (!value.toString().matches("^\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?Z?)?)?$")) {
+                    throw new WebApplicationException("Value for prop " + name + " in deployment " +
+                            deployment.getName() + " of application " + deployment.getApplication().getName() +
+                            " cannot be converted to a timestamp.", Response.Status.BAD_REQUEST);
+                }
+            }
+            case OBJECT -> {
+                try {
+                    String str = CustomJacksonMapper.getInstance().writeValueAsString(value);
+                    if (!str.startsWith("{") || !str.endsWith("}")) {
+                        throw new WebApplicationException("Value for prop " + name + " in deployment " +
+                                deployment.getName() + " of application " + deployment.getApplication().getName() +
+                                " cannot be converted to an object.", Response.Status.BAD_REQUEST);
+                    }
+                } catch (JsonProcessingException e) {
+                    throw new WebApplicationException("Value for prop " + name + " in deployment " +
+                            deployment.getName() + " of application " + deployment.getApplication().getName() +
+                            " cannot be converted to an object.", Response.Status.BAD_REQUEST);
+                }
+            }
+            case ARRAY -> {
+                try {
+                    String str = CustomJacksonMapper.getInstance().writeValueAsString(value);
+                    if (!str.startsWith("[") || !str.endsWith("]")) {
+                        throw new WebApplicationException("Value for prop " + name + " in deployment " +
+                                deployment.getName() + " of application " + deployment.getApplication().getName() +
+                                " cannot be converted to an array.", Response.Status.BAD_REQUEST);
+                    }
+                } catch (JsonProcessingException e) {
+                    throw new WebApplicationException("Value for prop " + name + " in deployment " +
+                            deployment.getName() + " of application " + deployment.getApplication().getName() +
+                            " cannot be converted to an array.", Response.Status.BAD_REQUEST);
+                }
+            }
         }
     }
 }
