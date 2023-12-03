@@ -5,7 +5,6 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
 import lombok.EqualsAndHashCode;
 import org.quartz.JobExecutionContext;
 
@@ -22,7 +21,7 @@ import java.util.Optional;
 @DiscriminatorValue(DeploymentStrategy.Values.FULL)
 public class FullDeployment extends Deployment {
 
-    @Override @Transient
+    @Override
     public Uni<Void> deploy() {
         return Multi.createFrom().iterable(this.getApplication().getSubscribers())
                 .onItem()
@@ -39,7 +38,7 @@ public class FullDeployment extends Deployment {
                 .withBackOff(Duration.ofMillis(500))
                 .atMost(3)
                 .onFailure()
-                .invoke(throwable -> Log.error("Error providing AAO deployment to a subscriber: ", throwable))
+                .invoke(ex -> Log.error("Error providing FULL deployment to a subscriber: ", ex))
                 .onItem()
                 .invoke(subscriber -> subscriber.updateVersionedDeployment(this.getId(), this.hashCode()))
                 .skip()

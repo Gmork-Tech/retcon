@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.quartz.Job;
 import tech.gmork.model.Validatable;
 import tech.gmork.model.entities.deployment.*;
@@ -33,6 +34,9 @@ import java.util.Set;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="kind", discriminatorType = DiscriminatorType.STRING)
 public abstract class Deployment extends PanacheEntityBase implements Validatable, Job {
+
+    protected static final long MIN_DELAY_MILLIS =
+            ConfigProvider.getConfig().getValue("deployments.minimum.increment.delay.millis", long.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

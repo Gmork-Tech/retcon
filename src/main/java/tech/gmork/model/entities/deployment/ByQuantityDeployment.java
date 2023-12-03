@@ -1,5 +1,6 @@
 package tech.gmork.model.entities.deployment;
 
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -32,7 +33,7 @@ public class ByQuantityDeployment extends Deployment {
 
     @Override
     public Uni<Void> deploy() {
-        return null;
+        return Uni.createFrom().voidItem();
     }
 
     @Override
@@ -47,8 +48,8 @@ public class ByQuantityDeployment extends Deployment {
 
         var trigger = TriggerBuilder.newTrigger()
                 .withIdentity( "deployment:" + this.getId())
-                .startNow()
                 .withSchedule(schedule)
+                .startNow()
                 .build();
 
         return Optional.of(QuartzJob.fromJobAndTrigger(job, trigger));
@@ -64,9 +65,15 @@ public class ByQuantityDeployment extends Deployment {
             throw new WebApplicationException("Quantity based deployments require an initial deployment " +
                     "quantity, if incremental deployment is requested.", Response.Status.BAD_REQUEST);
         }
-        if (incrementDelay == null && shouldIncrement) {
-            throw new WebApplicationException("Quantity based deployments require an increment delay " +
-                    "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+        if(shouldIncrement) {
+            if (incrementDelay == null) {
+                throw new WebApplicationException("Quantity based deployments require an increment delay " +
+                        "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+            }
+            if (incrementDelay.toMillis() < MIN_DELAY_MILLIS) {
+                throw new WebApplicationException("Quantity based deployments require a minimum deployment delay of " +
+                        MIN_DELAY_MILLIS + "ms if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+            }
         }
         if (incrementQuantity == null && shouldIncrement) {
             throw new WebApplicationException("Quantity based deployments require an increment quantity " +

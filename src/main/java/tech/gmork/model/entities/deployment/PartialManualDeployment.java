@@ -30,7 +30,7 @@ public class PartialManualDeployment extends Deployment {
 
     @Override
     public Uni<Void> deploy() {
-        return null;
+        return Uni.createFrom().voidItem();
     }
 
     @Override

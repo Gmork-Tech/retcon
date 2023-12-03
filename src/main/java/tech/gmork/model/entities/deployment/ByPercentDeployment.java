@@ -1,6 +1,7 @@
 package tech.gmork.model.entities.deployment;
 
 
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -22,7 +23,6 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(DeploymentStrategy.Values.BY_PERCENTAGE)
 public class ByPercentDeployment extends Deployment {
-
     private Instant lastDeployed;
     private boolean shouldIncrement = false;
     private Duration incrementDelay = Duration.ofMinutes(5);
@@ -41,9 +41,15 @@ public class ByPercentDeployment extends Deployment {
             throw new WebApplicationException("Percentage based deployments require an initial deployment " +
                     "percentage, if incremental deployment is requested.", Response.Status.BAD_REQUEST);
         }
-        if (incrementDelay == null && shouldIncrement) {
-            throw new WebApplicationException("Percentage based deployments require an increment delay " +
-                    "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+        if(shouldIncrement) {
+            if (incrementDelay == null) {
+                throw new WebApplicationException("Percentage based deployments require an increment delay " +
+                        "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+            }
+            if (incrementDelay.toMillis() < MIN_DELAY_MILLIS) {
+                throw new WebApplicationException("Percentage based deployments require a minimum deployment delay of " +
+                        MIN_DELAY_MILLIS + "ms if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+            }
         }
         if (incrementPercentage == null && shouldIncrement) {
             throw new WebApplicationException("Percentage based deployments require an increment percentage " +
@@ -56,7 +62,7 @@ public class ByPercentDeployment extends Deployment {
 
     @Override
     public Uni<Void> deploy() {
-        return null;
+        return Uni.createFrom().voidItem();
     }
 
     @Override
@@ -71,8 +77,8 @@ public class ByPercentDeployment extends Deployment {
 
         var trigger = TriggerBuilder.newTrigger()
                 .withIdentity( "deployment:" + this.getId())
-                .startNow()
                 .withSchedule(schedule)
+                .startNow()
                 .build();
 
         return Optional.of(QuartzJob.fromJobAndTrigger(job, trigger));
