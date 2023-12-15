@@ -25,7 +25,7 @@ public class UserListResponse {
         if (res.getTotalPages() < pageNo || pageNo < 1) {
             throw new WebApplicationException("The requested page does not exist.", Response.Status.BAD_REQUEST);
         }
-        res.setUsers(query.page(pageNo, pageSize).list());
+        res.setUsers(query.page(pageNo - 1, pageSize).list());
         return res;
     }
 

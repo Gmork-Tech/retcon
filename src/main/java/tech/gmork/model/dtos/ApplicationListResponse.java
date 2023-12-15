@@ -1,5 +1,6 @@
 package tech.gmork.model.dtos;
 
+import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -25,7 +26,7 @@ public class ApplicationListResponse {
         if (res.getTotalPages() < pageNo || pageNo < 1) {
             throw new WebApplicationException("The requested page does not exist.", Response.Status.BAD_REQUEST);
         }
-        res.setApplications(query.page(pageNo, pageSize).list());
+        res.setApplications(query.page(pageNo - 1, pageSize).list());
         return res;
     }
 }

@@ -28,7 +28,6 @@ public class SocketController {
     @OnOpen
     public void onOpen(Session session, @PathParam("id") String id) {
         var uuid = tryParse(id);
-
         Application.<Application>findByIdOptional(uuid)
                 .ifPresentOrElse(app -> {
                     var sub = Subscriber.fromSession(session);
@@ -51,10 +50,9 @@ public class SocketController {
     @OnClose
     public void onClose(Session session, @PathParam("id") String id) {
         var uuid = tryParse(id);
-        var subId = session.getId();
         Application.<Application>findByIdOptional(uuid)
                 .ifPresentOrElse(app -> {
-                    app.removeSubscriberById(subId);
+                    app.removeSubscriberById(session.getId());
                     app.getDeployments().forEach(deployment -> deployment.deploy()
                             .subscribe()
                             .with(dep -> Log.info("Subscriber onClose event triggered successful evaluation " +
