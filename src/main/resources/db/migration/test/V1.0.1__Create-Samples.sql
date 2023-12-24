@@ -58,7 +58,7 @@ VALUES (false, 300000000000, 20, 10, 50, 100, true, 80, 150, '123e4567-e89b-12d3
 
 -- Deployment 1: Canary
 INSERT INTO ConfigProp (nullable, propType, deploymentId, name, val)
-VALUES (false, 0, 1, 'prop1', '["value1", "value2"]'),
+VALUES (false, 0, 1, 'prop1', 'value1'),
        (true, 1, 1, 'prop2', 'value3'),
        (false, 2, 1, 'prop3', 'value4');
 
@@ -70,7 +70,7 @@ VALUES (false, 3, 2, 'prop4', 'value5'),
 
 -- Deployment 3: Production
 INSERT INTO ConfigProp (nullable, propType, deploymentId, name, val)
-VALUES (false, 0, 3, 'prop7', '["value8", "value9"]'),
-       (true, 1, 3, 'prop8', 'value10'),
-       (false, 2, 3, 'prop9', 'value11');
+VALUES (false, 0, 3, 'prop7', 'value8'),
+       (true, 1, 3, 'prop8', '10'),
+       (false, 2, 3, 'prop9', '11');
 

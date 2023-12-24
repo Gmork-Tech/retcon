@@ -28,7 +28,7 @@ public class ConfigProp extends PanacheEntityBase implements Validatable {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "val")
-    private Object value;
+    private String value;
 
     @Column(nullable = false)
     private PropType propType;
