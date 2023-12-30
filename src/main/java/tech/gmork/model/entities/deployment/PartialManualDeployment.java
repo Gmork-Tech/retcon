@@ -4,6 +4,8 @@ import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.quartz.JobExecutionContext;
@@ -16,6 +18,8 @@ import java.util.Optional;
 import java.util.Set;
 
 @Entity
+@Getter
+@Setter
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(DeploymentStrategy.Values.MANUAL)
 public class PartialManualDeployment extends Deployment {

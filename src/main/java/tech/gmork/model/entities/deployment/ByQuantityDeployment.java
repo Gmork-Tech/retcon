@@ -1,15 +1,15 @@
 package tech.gmork.model.entities.deployment;
 
-import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.quartz.*;
 
-import tech.gmork.model.entities.ConfigProp;
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
 import tech.gmork.model.helper.QuartzJob;
@@ -19,6 +19,8 @@ import java.time.Instant;
 import java.util.Optional;
 
 @Entity
+@Getter
+@Setter
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(DeploymentStrategy.Values.BY_QUANTITY)
 public class ByQuantityDeployment extends Deployment {
@@ -78,9 +80,6 @@ public class ByQuantityDeployment extends Deployment {
         if (incrementQuantity == null && shouldIncrement) {
             throw new WebApplicationException("Quantity based deployments require an increment quantity " +
                     "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
-        }
-        if (getProps() != null) {
-            getProps().forEach(ConfigProp::validate);
         }
     }
 

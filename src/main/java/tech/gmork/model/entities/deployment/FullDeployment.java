@@ -6,6 +6,8 @@ import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.quartz.JobExecutionContext;
 
 import tech.gmork.model.entities.Deployment;
@@ -17,6 +19,8 @@ import java.util.Optional;
 
 
 @Entity
+@Getter
+@Setter
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(DeploymentStrategy.Values.FULL)
 public class FullDeployment extends Deployment {

@@ -1,6 +1,5 @@
 package tech.gmork.model.dtos;
 
-import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;

@@ -13,18 +13,19 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import org.quartz.Job;
 import tech.gmork.model.Validatable;
 import tech.gmork.model.entities.deployment.*;
+import tech.gmork.model.enums.DeploymentStrategy;
 import tech.gmork.model.enums.DeploymentStrategy.Values;
 import tech.gmork.model.helper.QuartzJob;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@EqualsAndHashCode(exclude = "application", callSuper = false)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = FullDeployment.class, name = Values.FULL),
         @JsonSubTypes.Type(value = ByQuantityDeployment.class, name = Values.BY_QUANTITY),
@@ -44,11 +45,11 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
 
     private String name;
 
-    @OneToMany(mappedBy = "deployment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "deployment", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ConfigProp> props;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "applicationId")
     private Application application;
 

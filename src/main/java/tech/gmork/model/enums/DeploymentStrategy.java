@@ -15,10 +15,10 @@ public enum DeploymentStrategy {
     }
 
     public static class Values {
-        public static final String FULL = "full";
-        public static final String BY_PERCENTAGE = "percent";
-        public static final String BY_QUANTITY = "quantity";
-        public static final String MANUAL = "manual";
+        public static final String FULL = "FULL";
+        public static final String BY_PERCENTAGE = "BY_PERCENTAGE";
+        public static final String BY_QUANTITY = "BY_QUANTITY";
+        public static final String MANUAL = "MANUAL";
     }
 
 }
