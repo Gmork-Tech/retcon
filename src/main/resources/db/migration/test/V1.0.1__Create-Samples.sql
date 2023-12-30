@@ -51,10 +51,10 @@ VALUES ('123e4567-e89b-12d3-a456-426655440000', 'Sample Application 1', true),
         ('b9461032-a15e-4243-8790-589012345678', 'Sample Application 50', true);
 
 -- Deployment 1: Canary
-INSERT INTO Deployment (convertToFull, incrementDelay, incrementPercentage, incrementQuantity, initialPercentage, initialQuantity, shouldIncrement, targetPercentage, targetQuantity, applicationId, kind, name)
-VALUES (false, 300000000000, 20, 10, 50, 100, true, 80, 150, '123e4567-e89b-12d3-a456-426655440000', 'BY_QUANTITY', 'Deployment 1'),
-       (false, 300000000000, 30, 20, 20, 200, true, 60, 300, '123e4567-e89b-12d3-a456-426655440000', 'MANUAL', 'Deployment 2'),
-       (false, 300000000000, 40, 30, 10, 400, true, 40, 600, '123e4567-e89b-12d3-a456-426655440000', 'FULL', 'Deployment 3');
+INSERT INTO Deployment (priority, convertToFull, incrementDelay, incrementPercentage, incrementQuantity, initialPercentage, initialQuantity, shouldIncrement, targetPercentage, targetQuantity, applicationId, kind, name)
+VALUES (1, false, 300000000000, 20, 10, 50, 100, true, 80, 150, '123e4567-e89b-12d3-a456-426655440000', 'BY_QUANTITY', 'Deployment 1'),
+       (1, false, 300000000000, 30, 20, 20, 200, true, 60, 300, '123e4567-e89b-12d3-a456-426655440000', 'MANUAL', 'Deployment 2'),
+       (1, false, 300000000000, 40, 30, 10, 400, true, 40, 600, '123e4567-e89b-12d3-a456-426655440000', 'FULL', 'Deployment 3');
 
 -- Deployment 1: Canary
 INSERT INTO ConfigProp (created, nullable, deploymentId, name, val, kind)

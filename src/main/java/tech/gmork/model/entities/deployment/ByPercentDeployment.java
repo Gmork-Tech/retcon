@@ -78,7 +78,7 @@ public class ByPercentDeployment extends Deployment {
         }
 
         // Get the total number of currently connected subscribers, if 0, end the deployment phase immediately
-        var totalSubs = this.getApplication().getSubscribers().size();
+        int totalSubs = this.getApplication().getSubscribers().size();
         if (totalSubs == 0) {
             Log.info("No subscribers for application: " + this.getApplication() + " therefore nothing to deploy.");
             return Uni.createFrom().voidItem();
@@ -103,10 +103,10 @@ public class ByPercentDeployment extends Deployment {
         }
 
         // Determine our end goal
-        int finalTargetNumSubs = Math.round(totalSubs * (targetPercentage / 100.00F));
+        int idealTargetNumSubs = Math.round(totalSubs * (targetPercentage / 100.00F));
 
         if (!shouldIncrement) {
-            numSubsToDeployTo = finalTargetNumSubs;
+            numSubsToDeployTo = idealTargetNumSubs;
             // Fallback to 1 if we are under goal, the user requests *some* non-zero target deployment, but the math rounds us down to 0
             if (numSubsToDeployTo == 0 && targetPercentage > 0) {
                 numSubsToDeployTo = 1;
@@ -132,29 +132,40 @@ public class ByPercentDeployment extends Deployment {
             this.setFirstRun(false);
         } else {
             // Else get the currently deployed percentage
-            float currentPercentage = ((float) subsAlreadyDeployed / totalSubs) * 100.00F;
+            short currentPercentage = (short) (((float) subsAlreadyDeployed / totalSubs) * 100);
 
-            // Now let's consider the possibilities. We are incrementing either positively or negatively.
-
-
-            // If we've already met goal, end the deployment phase immediately
-            if (currentPercentage >= targetPercentage) {
+            // Determine if we are in the goldilocks zone, need to increment, or need to decrement
+            // At most we want to move by our incrementPercentage, else we'll use a remainder to hit our target
+            // If we are perfect, we can end immediately
+            if (currentPercentage == targetPercentage) {
                 Log.info("Deployment: " + this.getId() + " already meets or exceeds target deployment percentage");
                 return Uni.createFrom().voidItem();
-            } else if (currentPercentage + incrementPercentage <= targetPercentage) {
-                numSubsToDeployTo = Math.round(totalSubs * (incrementPercentage / 100.00F));
-                // Fallback to 1 if we are under goal, the user requests *some* increment and the math rounds us down to 0
-                if (numSubsToDeployTo == 0 && incrementPercentage > 0) {
-                    numSubsToDeployTo = 1;
+            } else if (currentPercentage > targetPercentage) {
+                // If we are decrementing
+                if (currentPercentage - incrementPercentage >= targetPercentage) {
+                    numSubsToDeployTo = -Math.round(totalSubs * (incrementPercentage / 100.00F));
+                } else {
+                    short remainderPercentage = (short) (currentPercentage - targetPercentage);
+                    numSubsToDeployTo = -Math.round(totalSubs * (remainderPercentage / 100.00F));
                 }
             } else {
-                float remainderPercentage = targetPercentage - currentPercentage;
-                numSubsToDeployTo = Math.round(totalSubs * (remainderPercentage / 100.00F));
-                // Fallback to 1 if we are under goal, and the remainder percentage is not 0, but the math rounds us down to 0
-                if (numSubsToDeployTo == 0 && remainderPercentage > 0) {
-                    numSubsToDeployTo = 1;
+                // If we are incrementing
+                if (currentPercentage + incrementPercentage <= targetPercentage) {
+                    numSubsToDeployTo = Math.round(totalSubs * (incrementPercentage / 100.00F));
+                } else {
+                    short remainderPercentage = (short) (targetPercentage - currentPercentage);
+                    numSubsToDeployTo = Math.round(totalSubs * (remainderPercentage / 100.00F));
                 }
             }
+        }
+
+        // If we need to remove some values from the subs that have the values....
+        if (numSubsToDeployTo < 0) {
+            // If we need to remove them all, remove them all, but don't overdo it.
+            if(Math.abs(numSubsToDeployTo) > subsAlreadyDeployed) {
+                numSubsToDeployTo = -subsAlreadyDeployed;
+            }
+            // Todo: do removal
         }
 
         // If we need to deploy more than what remains in order to hit goal, set the number to what remains
