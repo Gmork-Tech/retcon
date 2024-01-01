@@ -2,7 +2,6 @@ package tech.gmork.model.entities.deployment;
 
 
 import io.quarkus.logging.Log;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -37,7 +36,6 @@ public class ByPercentDeployment extends Deployment {
     private Short incrementPercentage = 5;
     private Short initialPercentage = 5;
     private Short targetPercentage = 100;
-    private boolean convertToFull = true;
 
     @Transient
     private boolean firstRun = true;
@@ -72,9 +70,9 @@ public class ByPercentDeployment extends Deployment {
     public Uni<Void> deploy() {
 
         // If target percentage is zero or for some reason negative, end the deployment phase immediately
-        if (targetPercentage <= 0) {
-            Log.info("User has specified that they would like 0% of hosts to receive this deployment.");
-            return Uni.createFrom().voidItem();
+        if (targetPercentage < 0) {
+            throw new WebApplicationException("User has specified an invalid target percentage for deployment: "
+                    + this.getName(), Response.Status.BAD_REQUEST);
         }
 
         // Get the total number of currently connected subscribers, if 0, end the deployment phase immediately
@@ -107,7 +105,7 @@ public class ByPercentDeployment extends Deployment {
 
         if (!shouldIncrement) {
             numSubsToDeployTo = idealTargetNumSubs;
-            // Fallback to 1 if we are under goal, the user requests *some* non-zero target deployment, but the math rounds us down to 0
+            // Fallback to 1 if the user requests *some* non-zero target deployment, but the math rounds us down to 0
             if (numSubsToDeployTo == 0 && targetPercentage > 0) {
                 numSubsToDeployTo = 1;
             }
@@ -138,7 +136,7 @@ public class ByPercentDeployment extends Deployment {
             // At most we want to move by our incrementPercentage, else we'll use a remainder to hit our target
             // If we are perfect, we can end immediately
             if (currentPercentage == targetPercentage) {
-                Log.info("Deployment: " + this.getId() + " already meets or exceeds target deployment percentage");
+                Log.info("Deployment: " + this.getName() + " already meets target deployment percentage");
                 return Uni.createFrom().voidItem();
             } else if (currentPercentage > targetPercentage) {
                 // If we are decrementing
@@ -165,7 +163,7 @@ public class ByPercentDeployment extends Deployment {
             if(Math.abs(numSubsToDeployTo) > subsAlreadyDeployed) {
                 numSubsToDeployTo = -subsAlreadyDeployed;
             }
-            // Todo: do removal
+            // Todo: implement removal
         }
 
         // If we need to deploy more than what remains in order to hit goal, set the number to what remains
@@ -175,28 +173,7 @@ public class ByPercentDeployment extends Deployment {
 
         var subsForDeployment = subsAwaitingDeployment.subList(0, numSubsToDeployTo);
 
-        return Multi.createFrom().iterable(subsForDeployment)
-                .onItem()
-                .invoke(subscriber -> {
-                    if (!subscriber.getVersionedDeployments().containsKey(this.getId())) {
-                        subscriber.getSession().getAsyncRemote().sendObject(this);
-                    }
-                    if (subscriber.getVersionedDeployments().get(this.getId()) != this.hashCode()) {
-                        subscriber.getSession().getAsyncRemote().sendObject(this);
-                    }
-                })
-                .onFailure()
-                .retry()
-                .withBackOff(Duration.ofMillis(500))
-                .atMost(3)
-                .onItem()
-                .invoke(subscriber -> subscriber.updateVersionedDeployment(this.getId(), this.hashCode()))
-                .onFailure()
-                .invoke(ex -> Log.error("Error providing BY_PERCENT deployment to a subscriber: ", ex))
-                .skip()
-                .where(ignored -> true)
-                .toUni()
-                .replaceWithVoid();
+        return deploy(subsForDeployment);
     }
 
     @Override

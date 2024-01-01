@@ -27,28 +27,7 @@ public class FullDeployment extends Deployment {
 
     @Override
     public Uni<Void> deploy() {
-        return Multi.createFrom().iterable(this.getApplication().getSubscribers())
-                .onItem()
-                .invoke(subscriber -> {
-                    if (!subscriber.getVersionedDeployments().containsKey(this.getId())) {
-                        subscriber.getSession().getAsyncRemote().sendObject(this);
-                    }
-                    if (subscriber.getVersionedDeployments().get(this.getId()) != this.hashCode()) {
-                        subscriber.getSession().getAsyncRemote().sendObject(this);
-                    }
-                })
-                .onFailure()
-                .retry()
-                .withBackOff(Duration.ofMillis(500))
-                .atMost(3)
-                .onFailure()
-                .invoke(ex -> Log.error("Error providing FULL deployment to a subscriber: ", ex))
-                .onItem()
-                .invoke(subscriber -> subscriber.updateVersionedDeployment(this.getId(), this.hashCode()))
-                .skip()
-                .where(ignored -> true)
-                .toUni()
-                .replaceWithVoid();
+        return deploy(this.getApplication().getSubscribers());
     }
 
     @Override

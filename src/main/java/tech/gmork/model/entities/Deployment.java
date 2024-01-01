@@ -3,6 +3,8 @@ package tech.gmork.model.entities;
 import com.fasterxml.jackson.annotation.*;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.logging.Log;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -12,11 +14,14 @@ import lombok.Setter;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.quartz.Job;
 import tech.gmork.model.Validatable;
+import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.deployment.*;
 import tech.gmork.model.enums.DeploymentStrategy;
 import tech.gmork.model.enums.DeploymentStrategy.Values;
 import tech.gmork.model.helper.QuartzJob;
 
+import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -57,6 +62,31 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
     private Application application;
 
     public abstract Uni<Void> deploy();
+
+    public Uni<Void> deploy(Collection<Subscriber> subscribers) {
+        return Multi.createFrom().iterable(subscribers)
+                .onItem()
+                .invoke(subscriber -> {
+                    if (!subscriber.getVersionedDeployments().containsKey(this.getId())) {
+                        subscriber.getSession().getAsyncRemote().sendObject(this);
+                    }
+                    if (subscriber.getVersionedDeployments().get(this.getId()) != this.hashCode()) {
+                        subscriber.getSession().getAsyncRemote().sendObject(this);
+                    }
+                })
+                .onFailure()
+                .retry()
+                .withBackOff(Duration.ofMillis(500))
+                .atMost(3)
+                .onItem()
+                .invoke(subscriber -> subscriber.updateVersionedDeployment(this.getId(), this.hashCode()))
+                .onFailure()
+                .invoke(ex -> Log.error("Error providing deployment: " + this.getName() + " to subscriber.", ex))
+                .skip()
+                .where(ignored -> true)
+                .toUni()
+                .replaceWithVoid();
+    }
 
     public abstract Optional<QuartzJob> schedule();
 

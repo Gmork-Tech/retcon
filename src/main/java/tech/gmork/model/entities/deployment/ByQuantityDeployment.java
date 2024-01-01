@@ -31,7 +31,6 @@ public class ByQuantityDeployment extends Deployment {
     private boolean shouldIncrement = false;
     private Duration incrementDelay = Duration.ofMinutes(5);
     private Short targetQuantity;
-    private boolean convertToFull = false;
 
     @Override
     public Uni<Void> deploy() {
