@@ -1,7 +1,5 @@
 package tech.gmork.model.entities.deployment;
 
-import io.quarkus.logging.Log;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -14,7 +12,6 @@ import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
 import tech.gmork.model.helper.QuartzJob;
 
-import java.time.Duration;
 import java.util.Optional;
 
 

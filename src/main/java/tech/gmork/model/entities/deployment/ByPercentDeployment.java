@@ -46,11 +46,15 @@ public class ByPercentDeployment extends Deployment {
             throw new WebApplicationException("Percentage based deployments require a target deployment percentage.",
                     Response.Status.BAD_REQUEST);
         }
-        if (initialPercentage == null && shouldIncrement) {
-            throw new WebApplicationException("Percentage based deployments require an initial deployment " +
-                    "percentage, if incremental deployment is requested.", Response.Status.BAD_REQUEST);
-        }
         if(shouldIncrement) {
+            if (initialPercentage == null) {
+                throw new WebApplicationException("Percentage based deployments require an initial deployment " +
+                        "percentage, if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+            }
+            if (incrementPercentage == null) {
+                throw new WebApplicationException("Percentage based deployments require an increment percentage " +
+                        "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+            }
             if (incrementDelay == null) {
                 throw new WebApplicationException("Percentage based deployments require an increment delay " +
                         "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
@@ -60,19 +64,15 @@ public class ByPercentDeployment extends Deployment {
                         MIN_DELAY_MILLIS + "ms if incremental deployment is requested.", Response.Status.BAD_REQUEST);
             }
         }
-        if (incrementPercentage == null && shouldIncrement) {
-            throw new WebApplicationException("Percentage based deployments require an increment percentage " +
-                    "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
-        }
     }
 
     @Override
     public Uni<Void> deploy() {
 
-        // If target percentage is zero or for some reason negative, end the deployment phase immediately
+        // If target percentage is negative, end the deployment phase immediately
         if (targetPercentage < 0) {
-            throw new WebApplicationException("User has specified an invalid target percentage for deployment: "
-                    + this.getName(), Response.Status.BAD_REQUEST);
+            Log.info("User has specified an invalid target percentage for deployment: " + this.getName());
+            return Uni.createFrom().voidItem();
         }
 
         // Get the total number of currently connected subscribers, if 0, end the deployment phase immediately
@@ -84,7 +84,7 @@ public class ByPercentDeployment extends Deployment {
 
 
         List<Subscriber> subsAwaitingDeployment = new ArrayList<>();
-        int subsAlreadyDeployed = 0;
+        int compliantSubs = 0;
         int numSubsToDeployTo = 0;
 
         // Determine how many subscribers already have the latest deployment version based on hashcode
@@ -95,12 +95,12 @@ public class ByPercentDeployment extends Deployment {
                 if (subscriber.getVersionedDeployments().get(this.getId()) != hashCode()) {
                     subsAwaitingDeployment.add(subscriber);
                 } else {
-                    subsAlreadyDeployed++;
+                    compliantSubs++;
                 }
             }
         }
 
-        // Determine our end goal
+        // Determine the ideal number of subscribers to have the deployment in order to be compliant
         int idealTargetNumSubs = Math.round(totalSubs * (targetPercentage / 100.00F));
 
         if (!shouldIncrement) {
@@ -109,14 +109,14 @@ public class ByPercentDeployment extends Deployment {
             if (numSubsToDeployTo == 0 && targetPercentage > 0) {
                 numSubsToDeployTo = 1;
             }
-            if (numSubsToDeployTo > subsAlreadyDeployed) {
+            if (numSubsToDeployTo > compliantSubs) {
                 // Even though incrementing is disabled, we still want to hit our target. This line exists in case auto-scaling increases
                 // the number of subscribers at some point, and we are no longer in alignment with our target percentage.
-                numSubsToDeployTo = numSubsToDeployTo - subsAlreadyDeployed;
-            } else if (numSubsToDeployTo < subsAlreadyDeployed) {
+                numSubsToDeployTo = numSubsToDeployTo - compliantSubs;
+            } else if (numSubsToDeployTo < compliantSubs) {
                 // This will produce a negative number, indicating we need to remove the config values from some subscribers to fall in line with the target.
                 // This can happen when the number of subscribers decreases, potentially due to auto-scaling.
-                numSubsToDeployTo = numSubsToDeployTo - subsAlreadyDeployed;
+                numSubsToDeployTo = numSubsToDeployTo - compliantSubs;
             }
         } else if (this.isFirstRun()) {
             // If this is the first time this deployment has been processed, and we should incrementally deploy, use the initial percentage
@@ -130,7 +130,7 @@ public class ByPercentDeployment extends Deployment {
             this.setFirstRun(false);
         } else {
             // Else get the currently deployed percentage
-            short currentPercentage = (short) (((float) subsAlreadyDeployed / totalSubs) * 100);
+            short currentPercentage = (short) (((float) compliantSubs / totalSubs) * 100);
 
             // Determine if we are in the goldilocks zone, need to increment, or need to decrement
             // At most we want to move by our incrementPercentage, else we'll use a remainder to hit our target
@@ -160,8 +160,8 @@ public class ByPercentDeployment extends Deployment {
         // If we need to remove some values from the subs that have the values....
         if (numSubsToDeployTo < 0) {
             // If we need to remove them all, remove them all, but don't overdo it.
-            if(Math.abs(numSubsToDeployTo) > subsAlreadyDeployed) {
-                numSubsToDeployTo = -subsAlreadyDeployed;
+            if(Math.abs(numSubsToDeployTo) > compliantSubs) {
+                numSubsToDeployTo = -compliantSubs;
             }
             // Todo: implement removal
         }

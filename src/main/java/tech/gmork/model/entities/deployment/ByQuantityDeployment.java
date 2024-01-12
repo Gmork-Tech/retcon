@@ -62,11 +62,16 @@ public class ByQuantityDeployment extends Deployment {
             throw new WebApplicationException("Quantity based deployments require a target deployment quantity.",
                     Response.Status.BAD_REQUEST);
         }
-        if (initialQuantity == null && shouldIncrement) {
-            throw new WebApplicationException("Quantity based deployments require an initial deployment " +
-                    "quantity, if incremental deployment is requested.", Response.Status.BAD_REQUEST);
-        }
-        if(shouldIncrement) {
+
+        if (shouldIncrement) {
+            if (initialQuantity == null) {
+                throw new WebApplicationException("Quantity based deployments require an initial deployment " +
+                        "quantity, if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+            }
+            if (incrementQuantity == null) {
+                throw new WebApplicationException("Quantity based deployments require an increment quantity " +
+                        "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
+            }
             if (incrementDelay == null) {
                 throw new WebApplicationException("Quantity based deployments require an increment delay " +
                         "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
@@ -75,10 +80,6 @@ public class ByQuantityDeployment extends Deployment {
                 throw new WebApplicationException("Quantity based deployments require a minimum deployment delay of " +
                         MIN_DELAY_MILLIS + "ms if incremental deployment is requested.", Response.Status.BAD_REQUEST);
             }
-        }
-        if (incrementQuantity == null && shouldIncrement) {
-            throw new WebApplicationException("Quantity based deployments require an increment quantity " +
-                    "if incremental deployment is requested.", Response.Status.BAD_REQUEST);
         }
     }
 

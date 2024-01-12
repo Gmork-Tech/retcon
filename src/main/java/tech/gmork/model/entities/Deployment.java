@@ -9,20 +9,17 @@ import io.smallrye.mutiny.Uni;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.quartz.Job;
 import tech.gmork.model.Validatable;
 import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.deployment.*;
-import tech.gmork.model.enums.DeploymentStrategy;
 import tech.gmork.model.enums.DeploymentStrategy.Values;
 import tech.gmork.model.helper.QuartzJob;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
