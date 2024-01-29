@@ -23,6 +23,11 @@ public class TimestampConfigProp extends ConfigProp {
     @Convert(converter = TimstampPropConverter.class)
     private Instant val;
 
+    @Override
+    protected boolean hasValue() {
+        return val != null;
+    }
+
     static class TimstampPropConverter implements AttributeConverter<Instant, String> {
 
         @Override

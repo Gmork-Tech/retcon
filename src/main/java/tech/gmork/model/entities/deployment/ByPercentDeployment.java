@@ -12,7 +12,6 @@ import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.quartz.*;
 import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
@@ -78,7 +77,7 @@ public class ByPercentDeployment extends Deployment {
         // Get the total number of currently connected subscribers, if 0, end the deployment phase immediately
         int totalSubs = this.getApplication().getSubscribers().size();
         if (totalSubs == 0) {
-            Log.info("No subscribers for application: " + this.getApplication() + " therefore nothing to deploy.");
+            Log.info("No subscribers for application " + this.getApplication().getName() + ", therefore nothing to deploy.");
             return Uni.createFrom().voidItem();
         }
 
@@ -178,27 +177,11 @@ public class ByPercentDeployment extends Deployment {
 
     @Override
     public Optional<QuartzJob> schedule() {
-        var job = JobBuilder.newJob(ByPercentDeployment.class)
-                .withIdentity("deployment:" + this.getId())
+        var job = QuartzJob.newBuilder()
+                .withName("Deployment:" + this.getId())
+                .withInterval(this.incrementDelay)
                 .build();
-
-        var schedule = SimpleScheduleBuilder.simpleSchedule()
-                .withIntervalInMilliseconds(incrementDelay.toMillis())
-                .repeatForever();
-
-        var trigger = TriggerBuilder.newTrigger()
-                .withIdentity( "deployment:" + this.getId())
-                .withSchedule(schedule)
-                .startNow()
-                .build();
-
-        return Optional.of(QuartzJob.fromJobAndTrigger(job, trigger));
+        return Optional.of(job);
     }
 
-    @Override
-    public void execute(JobExecutionContext jobExecutionContext) {
-        deploy()
-                .subscribe()
-                .with(item -> {}, fail -> {});
-    }
 }

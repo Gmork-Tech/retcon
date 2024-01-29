@@ -19,4 +19,10 @@ import tech.gmork.model.enums.ValueType;
 public class StringConfigProp extends ConfigProp {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private String val;
+
+    @Override
+    protected boolean hasValue() {
+        return val != null;
+    }
+
 }

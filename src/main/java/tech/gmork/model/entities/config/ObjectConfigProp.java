@@ -26,6 +26,10 @@ public class ObjectConfigProp extends ConfigProp {
     @Convert(converter = ObjectPropConverter.class)
     private Map<String,Object> val;
 
+    @Override
+    protected boolean hasValue() {
+        return val != null;
+    }
 
     static class ObjectPropConverter implements AttributeConverter<Map<String,Object>, String> {
 

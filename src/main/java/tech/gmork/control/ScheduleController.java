@@ -1,17 +1,13 @@
 package tech.gmork.control;
 
-import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduler;
 import io.quarkus.vertx.ConsumeEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
 import tech.gmork.model.entities.Deployment;
-
-import java.util.Optional;
 
 import static tech.gmork.model.events.InternalEvents.DEPLOYMENT_CHANGE_EVENT;
 
@@ -22,32 +18,28 @@ public class ScheduleController {
     Scheduler scheduler;
 
     @ActivateRequestContext
-    void onStart(@Observes StartupEvent startupEvent) throws SchedulerException {
-        scheduler.clear();
+    void onStart(@Observes StartupEvent startupEvent) {
         Deployment.<Deployment>streamAll()
-                .map(Deployment::schedule)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .forEach(job -> {
-                    try {
-                        scheduler.scheduleJob(job.getDetails(), job.getTrigger());
-                    }
-                    catch (SchedulerException e) {
-                        Log.warn("Failed to schedule a job, reason: ", e);
-                    }
-                });
+                .forEach(this::scheduleJob);
+    }
+
+    void scheduleJob(Deployment deployment) {
+        deployment.schedule()
+                .ifPresent(job -> scheduler.newJob(job.getName())
+                        .setInterval(job.getInterval())
+                        .setAsyncTask(executionContext -> deployment.deploy())
+                        .schedule());
     }
 
     @ConsumeEvent(value = DEPLOYMENT_CHANGE_EVENT, blocking = true)
-    void onDeploymentChanged(Deployment deployment) {
+    void rescheduleJob(Deployment deployment) {
         deployment.schedule()
                 .ifPresent(job -> {
-                    try {
-                        scheduler.rescheduleJob(job.getTrigger().getKey(), job.getTrigger());
-                    }
-                    catch (SchedulerException e) {
-                        Log.warn("Failed to reschedule a job, reason: ", e);
-                    }
+                    scheduler.unscheduleJob(job.getName());
+                    scheduler.newJob("Deployment: " + deployment.getId())
+                            .setInterval(job.getInterval())
+                            .setAsyncTask(executionContext -> deployment.deploy())
+                            .schedule();
                 });
     }
 

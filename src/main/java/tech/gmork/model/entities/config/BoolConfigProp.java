@@ -22,6 +22,11 @@ public class BoolConfigProp extends ConfigProp {
     @Convert(converter = BoolPropConverter.class)
     private Boolean val;
 
+    @Override
+    protected boolean hasValue() {
+        return val != null;
+    }
+
     static class BoolPropConverter implements AttributeConverter<Boolean, String> {
 
         @Override

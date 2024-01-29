@@ -23,6 +23,11 @@ public class NumericConfigProp extends ConfigProp {
     @Convert(converter = NumericPropConverter.class)
     private Number val;
 
+    @Override
+    protected boolean hasValue() {
+        return val != null;
+    }
+
     static class NumericPropConverter implements AttributeConverter<Number, String> {
 
         @Override

@@ -6,7 +6,6 @@ import jakarta.persistence.Entity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.quartz.JobExecutionContext;
 
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
@@ -36,8 +35,5 @@ public class FullDeployment extends Deployment {
     public void validate() {
 
     }
-
-    @Override
-    public void execute(JobExecutionContext jobExecutionContext) {}
 
 }

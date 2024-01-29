@@ -8,7 +8,6 @@ import jakarta.ws.rs.core.Response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.quartz.*;
 
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
@@ -39,21 +38,11 @@ public class ByQuantityDeployment extends Deployment {
 
     @Override
     public Optional<QuartzJob> schedule() {
-        var job = JobBuilder.newJob(ByQuantityDeployment.class)
-                .withIdentity("deployment:" + this.getId())
+        var job = QuartzJob.newBuilder()
+                .withName("Deployment:" + this.getId())
+                .withInterval(this.incrementDelay)
                 .build();
-
-        var schedule = SimpleScheduleBuilder.simpleSchedule()
-                .withIntervalInMilliseconds(incrementDelay.toMillis())
-                .repeatForever();
-
-        var trigger = TriggerBuilder.newTrigger()
-                .withIdentity( "deployment:" + this.getId())
-                .withSchedule(schedule)
-                .startNow()
-                .build();
-
-        return Optional.of(QuartzJob.fromJobAndTrigger(job, trigger));
+        return Optional.of(job);
     }
 
     @Override
@@ -81,12 +70,5 @@ public class ByQuantityDeployment extends Deployment {
                         MIN_DELAY_MILLIS + "ms if incremental deployment is requested.", Response.Status.BAD_REQUEST);
             }
         }
-    }
-
-    @Override
-    public void execute(JobExecutionContext jobExecutionContext) {
-        deploy()
-                .subscribe()
-                .with(item -> {}, fail -> {});
     }
 }

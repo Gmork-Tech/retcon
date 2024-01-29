@@ -11,7 +11,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.quartz.Job;
 import tech.gmork.model.Validatable;
 import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.deployment.*;
@@ -36,7 +35,7 @@ import java.util.Set;
 })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="kind", discriminatorType = DiscriminatorType.STRING)
-public abstract class Deployment extends PanacheEntityBase implements Validatable, Job {
+public abstract class Deployment extends PanacheEntityBase implements Validatable {
 
     protected static final long MIN_DELAY_MILLIS =
             ConfigProvider.getConfig().getValue("deployments.minimum.increment.delay.millis", long.class);
@@ -50,11 +49,11 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
     @Column(nullable = false)
     private short priority = 1;
 
-    @OneToMany(mappedBy = "deployment", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "deployment", cascade = CascadeType.ALL)
     private Set<ConfigProp> props;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "applicationId")
     private Application application;
 

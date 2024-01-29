@@ -28,6 +28,11 @@ public class ArrayConfigProp extends ConfigProp {
     @Convert(converter = ArrayPropConverter.class)
     private List<Object> val;
 
+    @Override
+    protected boolean hasValue() {
+        return val != null;
+    }
+
     static class ArrayPropConverter implements AttributeConverter<List<Object>, String> {
 
         @Override

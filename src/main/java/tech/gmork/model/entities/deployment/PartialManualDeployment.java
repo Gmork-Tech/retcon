@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.quartz.JobExecutionContext;
 
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
@@ -41,8 +40,5 @@ public class PartialManualDeployment extends Deployment {
     public Optional<QuartzJob> schedule() {
         return Optional.empty();
     }
-
-    @Override
-    public void execute(JobExecutionContext jobExecutionContext) {}
 
 }

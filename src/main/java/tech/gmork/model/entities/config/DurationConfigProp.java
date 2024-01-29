@@ -25,6 +25,11 @@ public class DurationConfigProp extends ConfigProp {
     @Convert(converter = DurationPropConverter.class)
     private Duration val;
 
+    @Override
+    protected boolean hasValue() {
+        return val != null;
+    }
+
     static class DurationPropConverter implements AttributeConverter<Duration, String> {
 
         @Override
