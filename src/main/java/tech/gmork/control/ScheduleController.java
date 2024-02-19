@@ -3,6 +3,8 @@ package tech.gmork.control;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.scheduler.Scheduler;
 import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.event.Observes;
@@ -27,7 +29,7 @@ public class ScheduleController {
         deployment.schedule()
                 .ifPresent(job -> scheduler.newJob(job.getName())
                         .setInterval(job.getInterval())
-                        .setAsyncTask(executionContext -> deployment.deploy())
+                        .setAsyncTask(executionContext -> runJob(deployment.getId()))
                         .schedule());
     }
 
@@ -38,8 +40,23 @@ public class ScheduleController {
                     scheduler.unscheduleJob(job.getName());
                     scheduler.newJob("Deployment: " + deployment.getId())
                             .setInterval(job.getInterval())
-                            .setAsyncTask(executionContext -> deployment.deploy())
+                            .setAsyncTask(executionContext -> runJob(deployment.getId()))
                             .schedule();
+                });
+    }
+
+    @ActivateRequestContext
+    Uni<Void> runJob(Long deploymentId) {
+        return Uni.createFrom()
+                .voidItem()
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .map(vi -> Deployment.<Deployment>findByIdOptional(deploymentId))
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .chain(maybeDeployment -> {
+                    if (maybeDeployment.isEmpty()) {
+                        return Uni.createFrom().voidItem();
+                    }
+                    return maybeDeployment.get().deploy();
                 });
     }
 

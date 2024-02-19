@@ -65,9 +65,13 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
                 .invoke(subscriber -> {
                     if (!subscriber.getVersionedDeployments().containsKey(this.getId())) {
                         subscriber.getSession().getAsyncRemote().sendObject(this);
-                    }
-                    if (subscriber.getVersionedDeployments().get(this.getId()) != this.hashCode()) {
-                        subscriber.getSession().getAsyncRemote().sendObject(this);
+                    } else {
+                        var deployedVersion = subscriber.getVersionedDeployments().get(this.getId());
+                        if (deployedVersion == null) {
+                            subscriber.getSession().getAsyncRemote().sendObject(this);
+                        } else if (deployedVersion != this.hashCode()) {
+                            subscriber.getSession().getAsyncRemote().sendObject(this);
+                        }
                     }
                 })
                 .onFailure()

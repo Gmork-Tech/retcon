@@ -1,8 +1,11 @@
 package tech.gmork.control;
 
 import io.quarkus.logging.Log;
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnError;
@@ -28,44 +31,54 @@ public class SocketController {
     @OnOpen
     public void onOpen(Session session, @PathParam("id") String id) {
         var uuid = tryParse(id);
+        Infrastructure.getDefaultWorkerPool().execute(() -> doOnOpen(session, uuid));
+    }
+
+    @ActivateRequestContext
+    void doOnOpen(Session session, UUID uuid) {
         Application.<Application>findByIdOptional(uuid)
                 .ifPresentOrElse(app -> {
-                    var sub = Subscriber.fromSession(session);
-                    app.addSubscriber(sub);
-                    app.getDeployments().forEach(deployment -> deployment.deploy()
-                            .subscribe()
-                            .with(dep -> Log.info("Subscriber onOpen event triggered successful evaluation " +
-                                            "of deployment " + deployment.getName() + " for application " +
-                                            app.getName()),
-                                    fail -> Log.warn("Subscriber onOpen event failed evaluation " +
-                                            "of deployment " + deployment.getName() + " for application " +
-                                            app.getName(), fail)));
-                    },
-                () -> {
-                    throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST);
-                }
-        );
+                            var sub = Subscriber.fromSession(session);
+                            app.addSubscriber(sub);
+                            app.getDeployments().forEach(deployment -> deployment.deploy()
+                                    .subscribe()
+                                    .with(dep -> Log.info("Subscriber onOpen event triggered successful evaluation " +
+                                                    "of deployment " + deployment.getName() + " for application " +
+                                                    app.getName()),
+                                            fail -> Log.warn("Subscriber onOpen event failed evaluation " +
+                                                    "of deployment " + deployment.getName() + " for application " +
+                                                    app.getName(), fail)));
+                        },
+                        () -> {
+                            throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST);
+                        }
+                );
     }
 
     @OnClose
     public void onClose(Session session, @PathParam("id") String id) {
         var uuid = tryParse(id);
+        Infrastructure.getDefaultWorkerPool().execute(() -> doOnClose(session, uuid));
+    }
+
+    @ActivateRequestContext
+    void doOnClose(Session session, UUID uuid) {
         Application.<Application>findByIdOptional(uuid)
                 .ifPresentOrElse(app -> {
-                    app.removeSubscriberById(session.getId());
-                    app.getDeployments().forEach(deployment -> deployment.deploy()
-                            .subscribe()
-                            .with(dep -> Log.info("Subscriber onClose event triggered successful evaluation " +
-                                            "of deployment " + deployment.getName() + " for application " +
-                                            app.getName()),
-                                    fail -> Log.warn("Subscriber onClose event failed evaluation " +
-                                            "of deployment " + deployment.getName() + " for application " +
-                                            app.getName(), fail)));
-                    },
-                () -> {
-                    throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST);
-                }
-        );
+                            app.removeSubscriber(Subscriber.fromSession(session));
+                            app.getDeployments().forEach(deployment -> deployment.deploy()
+                                    .subscribe()
+                                    .with(dep -> Log.info("Subscriber onClose event triggered successful evaluation " +
+                                                    "of deployment " + deployment.getName() + " for application " +
+                                                    app.getName()),
+                                            fail -> Log.warn("Subscriber onClose event failed evaluation " +
+                                                    "of deployment " + deployment.getName() + " for application " +
+                                                    app.getName(), fail)));
+                        },
+                        () -> {
+                            throw new WebApplicationException("Please provide a valid UUID.", Response.Status.BAD_REQUEST);
+                        }
+                );
     }
 
     @OnError
