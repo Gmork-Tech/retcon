@@ -19,9 +19,14 @@ import java.text.NumberFormat;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(ValueType.Values.NUMBER)
 public class NumericConfigProp extends ConfigProp {
+
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Convert(converter = NumericPropConverter.class)
     private Number val;
+
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Convert(converter = NumericPropConverter.class)
+    private Number dval;
 
     @Override
     protected boolean hasValue() {

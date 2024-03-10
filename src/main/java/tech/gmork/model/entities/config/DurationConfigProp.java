@@ -21,9 +21,14 @@ import java.time.Duration;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(ValueType.Values.DURATION)
 public class DurationConfigProp extends ConfigProp {
+
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Convert(converter = DurationPropConverter.class)
     private Duration val;
+
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Convert(converter = DurationPropConverter.class)
+    private Duration dval;
 
     @Override
     protected boolean hasValue() {

@@ -19,9 +19,14 @@ import java.time.Instant;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(ValueType.Values.TIMESTAMP)
 public class TimestampConfigProp extends ConfigProp {
+
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Convert(converter = TimstampPropConverter.class)
     private Instant val;
+
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Convert(converter = TimstampPropConverter.class)
+    private Instant dval;
 
     @Override
     protected boolean hasValue() {

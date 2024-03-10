@@ -38,7 +38,10 @@ import java.time.Instant;
 public abstract class ConfigProp extends PanacheEntityBase implements Validatable {
 
     @Id
-    protected String name;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    private String name;
     private boolean nullable = false;
 
     @Column(nullable = false)
@@ -53,6 +56,10 @@ public abstract class ConfigProp extends PanacheEntityBase implements Validatabl
 
     @Override
     public void validate() {
+        if (getName() == null) {
+            throw new WebApplicationException(
+                    "All configuration properties must have a name", Response.Status.BAD_REQUEST);
+        }
         if (!isNullable() && !hasValue()) {
             throw new WebApplicationException("Deployment " + name +
                     " is marked not nullable but does not have a value", Response.Status.BAD_REQUEST);

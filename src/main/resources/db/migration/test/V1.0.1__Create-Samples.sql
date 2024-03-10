@@ -57,20 +57,20 @@ VALUES (1, 30000000000, 20, 10, 50, 100, true, 80, 150, null, '123e4567-e89b-12d
        (1, 30000000000, 40, 30, 10, 400, true, 40, 600, null, '123e4567-e89b-12d3-a456-426655440000', 'FULL', 'Deployment 3');
 
 -- Deployment 1: Canary
-INSERT INTO ConfigProp (created, nullable, deploymentId, name, val, kind)
-VALUES ('2023-12-30T16:26:04Z', false, 1, 'prop1', 'value1', 'STRING'),
-       ('2023-12-30T16:26:04Z', true, 1, 'prop2', 'value3', 'STRING'),
-       ('2023-12-30T16:26:04Z', false, 1, 'prop3', 'value4', 'STRING');
+INSERT INTO ConfigProp (created, nullable, deploymentId, name, val, dval, kind)
+VALUES ('2023-12-30T16:26:04Z', false, 1, 'prop1', 'value1', 'value1', 'STRING'),
+       ('2023-12-30T16:26:04Z', true, 1, 'prop2', 'value3', 'value3', 'STRING'),
+       ('2023-12-30T16:26:04Z', false, 1, 'prop3', 'value4', 'value4', 'STRING');
 
 -- Deployment 2: Staging
-INSERT INTO ConfigProp (created, nullable, deploymentId, name, val, kind)
-VALUES ('2023-12-30T16:26:04Z', false, 2, 'prop4', '5', 'NUMBER'),
-       ('2023-12-30T16:26:04Z', true, 2, 'prop5', '6', 'NUMBER'),
-       ('2023-12-30T16:26:04Z', false, 2, 'prop6', '7', 'NUMBER');
+INSERT INTO ConfigProp (created, nullable, deploymentId, name, val, dval, kind)
+VALUES ('2023-12-30T16:26:04Z', false, 2, 'prop4', '5', '5', 'NUMBER'),
+       ('2023-12-30T16:26:04Z', true, 2, 'prop5', '6', '6', 'NUMBER'),
+       ('2023-12-30T16:26:04Z', false, 2, 'prop6', '7', '7', 'NUMBER');
 
 -- Deployment 3: Production
-INSERT INTO ConfigProp (created, nullable, deploymentId, name, val, kind)
-VALUES ('2023-12-30T16:26:04Z', false, 3, 'prop7', 'true', 'BOOLEAN'),
-       ('2023-12-30T16:26:04Z', true, 3, 'prop8', '{"someName":"someValue"}', 'OBJECT'),
-       ('2023-12-30T16:26:04Z', false, 3, 'prop9', '[{"someName":"someValue"},{"someName":"someValue"}]', 'ARRAY'),
-       ('2023-12-30T16:26:04Z', false, 3, 'prop10', '[1,2,3,4]', 'ARRAY');
+INSERT INTO ConfigProp (created, nullable, deploymentId, name, val, dval, kind)
+VALUES ('2023-12-30T16:26:04Z', false, 3, 'prop7', 'true', 'true', 'BOOLEAN'),
+       ('2023-12-30T16:26:04Z', true, 3, 'prop8', '{"someName":"someValue"}', '{"someName":"someValue"}', 'OBJECT'),
+       ('2023-12-30T16:26:04Z', false, 3, 'prop9', '[{"someName":"someValue"},{"someName":"someValue"}]', '[{"someName":"someValue"},{"someName":"someValue"}]', 'ARRAY'),
+       ('2023-12-30T16:26:04Z', false, 3, 'prop10', '[1,2,3,4]', '[1,2,3,4]', 'ARRAY');

@@ -28,6 +28,10 @@ public class ArrayConfigProp extends ConfigProp {
     @Convert(converter = ArrayPropConverter.class)
     private List<Object> val;
 
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Convert(converter = ArrayPropConverter.class)
+    private List<Object> dval;
+
     @Override
     protected boolean hasValue() {
         return val != null;

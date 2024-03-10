@@ -22,9 +22,14 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(ValueType.Values.OBJECT)
 public class ObjectConfigProp extends ConfigProp {
+
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Convert(converter = ObjectPropConverter.class)
     private Map<String,Object> val;
+
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Convert(converter = ObjectPropConverter.class)
+    private Map<String,Object> dval;
 
     @Override
     protected boolean hasValue() {

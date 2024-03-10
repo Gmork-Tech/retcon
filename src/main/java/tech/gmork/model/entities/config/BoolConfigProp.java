@@ -18,9 +18,14 @@ import tech.gmork.model.enums.ValueType;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(ValueType.Values.BOOLEAN)
 public class BoolConfigProp extends ConfigProp {
+
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Convert(converter = BoolPropConverter.class)
     private Boolean val;
+
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Convert(converter = BoolPropConverter.class)
+    private Boolean dval;
 
     @Override
     protected boolean hasValue() {

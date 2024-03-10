@@ -47,7 +47,7 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
     private String name;
 
     @Column(nullable = false)
-    private short priority = 1;
+    private short priority = 100;
 
     @OneToMany(mappedBy = "deployment", cascade = CascadeType.ALL)
     private Set<ConfigProp> props;
