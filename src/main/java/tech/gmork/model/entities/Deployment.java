@@ -60,18 +60,13 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
     public abstract Uni<Void> deploy();
 
     public Uni<Void> deploy(Collection<Subscriber> subscribers) {
-        return Multi.createFrom().iterable(subscribers)
+        return Multi.createFrom()
+                .iterable(subscribers)
                 .onItem()
                 .invoke(subscriber -> {
-                    if (!subscriber.getVersionedDeployments().containsKey(this.getId())) {
-                        subscriber.getSession().getAsyncRemote().sendObject(this);
-                    } else {
-                        var deployedVersion = subscriber.getVersionedDeployments().get(this.getId());
-                        if (deployedVersion == null) {
-                            subscriber.getSession().getAsyncRemote().sendObject(this);
-                        } else if (deployedVersion != this.hashCode()) {
-                            subscriber.getSession().getAsyncRemote().sendObject(this);
-                        }
+                    var deployedVersion = subscriber.getVersionedDeployments().get(this.getId());
+                    if (!subscriber.hasDeployment(id) || deployedVersion == null || deployedVersion != hashCode()) {
+                        subscriber.sendDeploymentChangeEvent(this);
                     }
                 })
                 .onFailure()

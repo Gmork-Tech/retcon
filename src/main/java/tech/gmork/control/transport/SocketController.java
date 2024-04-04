@@ -1,4 +1,4 @@
-package tech.gmork.control;
+package tech.gmork.control.transport;
 
 import io.quarkus.logging.Log;
 import io.smallrye.common.annotation.Blocking;
