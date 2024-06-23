@@ -9,8 +9,11 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
+import tech.gmork.model.helper.ChangeRequest;
+import tech.gmork.model.helper.Compliance;
 import tech.gmork.model.helper.QuartzJob;
 
 import java.util.Optional;
@@ -27,9 +30,7 @@ public class PartialManualDeployment extends Deployment {
     private Set<String> targetHosts;
 
     @Override
-    public void validate() {
-
-    }
+    public void validate() {}
 
     @Override
     public Uni<Void> deploy() {
@@ -39,6 +40,16 @@ public class PartialManualDeployment extends Deployment {
     @Override
     public Optional<QuartzJob> schedule() {
         return Optional.empty();
+    }
+
+    @Override
+    public ChangeRequest determineChange(Compliance compliance) {
+        return null;
+    }
+
+    @Override
+    public int determineIdeal(Set<Subscriber> subscribers) {
+        return 0;
     }
 
 }

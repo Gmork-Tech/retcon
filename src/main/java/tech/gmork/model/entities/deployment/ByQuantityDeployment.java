@@ -9,13 +9,17 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.Deployment;
 import tech.gmork.model.enums.DeploymentStrategy;
+import tech.gmork.model.helper.ChangeRequest;
+import tech.gmork.model.helper.Compliance;
 import tech.gmork.model.helper.QuartzJob;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -43,6 +47,16 @@ public class ByQuantityDeployment extends Deployment {
                 .withInterval(this.incrementDelay)
                 .build();
         return Optional.of(job);
+    }
+
+    @Override
+    public ChangeRequest determineChange(Compliance compliance) {
+        return null;
+    }
+
+    @Override
+    public int determineIdeal(Set<Subscriber> subscribers) {
+        return targetQuantity;
     }
 
     @Override

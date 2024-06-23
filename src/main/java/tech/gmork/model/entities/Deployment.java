@@ -15,10 +15,13 @@ import tech.gmork.model.Validatable;
 import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.deployment.*;
 import tech.gmork.model.enums.DeploymentStrategy.Values;
+import tech.gmork.model.helper.ChangeRequest;
+import tech.gmork.model.helper.Compliance;
 import tech.gmork.model.helper.QuartzJob;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -83,6 +86,34 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
                 .replaceWithVoid();
     }
 
+    public Compliance determineCompliance(Set<Subscriber> subscribers) {
+
+        Set<Subscriber> compliantSubscribers = new HashSet<>();
+        Set<Subscriber> nonCompliantSubscribers = new HashSet<>();
+
+        // Determine how many subscribers already have the latest deployment version based on hashcode
+        subscribers.forEach(subscriber -> {
+            if (subscriber.getVersionedDeployments().containsKey(this.getId()) && subscriber.getVersionedDeployments().get(this.getId()) == hashCode()) {
+                compliantSubscribers.add(subscriber);
+            } else {
+                nonCompliantSubscribers.add(subscriber);
+            }
+        });
+
+        return Compliance.newBuilder()
+                .withNonCompliantSubscribers(nonCompliantSubscribers)
+                .withCompliantSubscribers(compliantSubscribers)
+                .withCurrentNumCompliantSubscribers(compliantSubscribers.size())
+                .withTargetNumCompliantSubscribers(determineIdeal(subscribers))
+                .build();
+    }
+
+
     public abstract Optional<QuartzJob> schedule();
+
+
+
+    public abstract ChangeRequest determineChange(Compliance compliance);
+    public abstract int determineIdeal(Set<Subscriber> subscribers);
 
 }
