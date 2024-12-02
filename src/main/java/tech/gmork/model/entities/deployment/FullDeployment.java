@@ -1,6 +1,5 @@
 package tech.gmork.model.entities.deployment;
 
-import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import lombok.EqualsAndHashCode;
@@ -24,11 +23,6 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @DiscriminatorValue(DeploymentStrategy.Values.FULL)
 public class FullDeployment extends Deployment {
-
-    @Override
-    public Uni<Void> deploy() {
-        return deploy(this.getApplication().getSubscribers());
-    }
 
     @Override
     public Optional<QuartzJob> schedule() {

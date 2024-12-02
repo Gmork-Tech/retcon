@@ -1,6 +1,5 @@
 package tech.gmork.model.entities.deployment;
 
-import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.ws.rs.WebApplicationException;
@@ -11,6 +10,7 @@ import lombok.Setter;
 
 import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.Deployment;
+import tech.gmork.model.enums.ChangeType;
 import tech.gmork.model.enums.DeploymentStrategy;
 import tech.gmork.model.helper.ChangeRequest;
 import tech.gmork.model.helper.Compliance;
@@ -36,11 +36,6 @@ public class ByQuantityDeployment extends Deployment {
     private Short targetQuantity;
 
     @Override
-    public Uni<Void> deploy() {
-        return Uni.createFrom().voidItem();
-    }
-
-    @Override
     public Optional<QuartzJob> schedule() {
         var job = QuartzJob.newBuilder()
                 .withName("Deployment:" + this.getId())
@@ -51,7 +46,25 @@ public class ByQuantityDeployment extends Deployment {
 
     @Override
     public ChangeRequest determineChange(Compliance compliance) {
-        return null;
+        // First check if it's an incremental deployment or if we're just supposed to hit target
+        // Use static factory on ChangeRequest to hit target directly.
+        if (!shouldIncrement || compliance.onTarget()) {
+            return ChangeRequest.fromCompliance(compliance);
+        } else {
+            var req = new ChangeRequest();
+            int diffToCompliance = compliance.diffCompliantToTarget();
+            if (diffToCompliance > incrementQuantity) {
+                diffToCompliance = incrementQuantity;
+            }
+            if (compliance.aboveTarget()) {
+                req.setChangeType(ChangeType.DECREMENT);
+                req.setSubscribers(compliance.getFirstXCompliantSubscribers(diffToCompliance));
+            } else if (compliance.belowTarget()) {
+                req.setChangeType(ChangeType.INCREMENT);
+                req.setSubscribers(compliance.getFirstXNonCompliantSubscribers(diffToCompliance));
+            }
+            return req;
+        }
     }
 
     @Override

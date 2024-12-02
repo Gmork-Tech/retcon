@@ -1,6 +1,5 @@
 package tech.gmork.model.entities.deployment;
 
-import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import lombok.EqualsAndHashCode;
@@ -31,11 +30,6 @@ public class PartialManualDeployment extends Deployment {
 
     @Override
     public void validate() {}
-
-    @Override
-    public Uni<Void> deploy() {
-        return Uni.createFrom().voidItem();
-    }
 
     @Override
     public Optional<QuartzJob> schedule() {

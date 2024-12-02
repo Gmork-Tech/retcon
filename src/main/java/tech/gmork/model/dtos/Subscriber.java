@@ -4,7 +4,6 @@ import jakarta.websocket.Session;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
-import tech.gmork.model.entities.Deployment;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,8 +38,8 @@ public class Subscriber {
         return versionedDeployments.containsKey(id);
     }
 
-    public void sendDeploymentChangeEvent(Deployment deployment) {
-        session.getAsyncRemote().sendObject(deployment);
+    public void sendDeploymentChangeTask(ClientTask task) {
+        session.getAsyncRemote().sendObject(task);
     }
 
     public static Subscriber fromSession(Session session) {

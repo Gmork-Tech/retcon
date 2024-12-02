@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.microprofile.config.ConfigProvider;
 import tech.gmork.model.Validatable;
+import tech.gmork.model.dtos.ClientTask;
 import tech.gmork.model.dtos.Subscriber;
 import tech.gmork.model.entities.deployment.*;
 import tech.gmork.model.enums.DeploymentStrategy.Values;
@@ -20,7 +21,6 @@ import tech.gmork.model.helper.Compliance;
 import tech.gmork.model.helper.QuartzJob;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -60,17 +60,24 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
     @JoinColumn(name = "applicationId")
     private Application application;
 
-    public abstract Uni<Void> deploy();
+    public Uni<Void> deploy() {
+        // Get the total number of currently connected subscribers, if 0, end the deployment phase immediately
+        var subs = this.getApplication().getSubscribers();
+        if (subs.isEmpty()) {
+            Log.info("No subscribers for application " + this.getApplication().getName() + ", therefore nothing to deploy.");
+            return Uni.createFrom().voidItem();
+        }
 
-    public Uni<Void> deploy(Collection<Subscriber> subscribers) {
+        var compliance = determineCompliance(subs);
+        var req = determineChange(compliance);
         return Multi.createFrom()
-                .iterable(subscribers)
+                .iterable(req.getSubscribers())
                 .onItem()
                 .invoke(subscriber -> {
-                    var deployedVersion = subscriber.getVersionedDeployments().get(this.getId());
-                    if (!subscriber.hasDeployment(id) || deployedVersion == null || deployedVersion != hashCode()) {
-                        subscriber.sendDeploymentChangeEvent(this);
-                    }
+                    ClientTask task = new ClientTask();
+                    task.setChangeType(req.getChangeType());
+                    task.setDeployment(this);
+                    subscriber.sendDeploymentChangeTask(task);
                 })
                 .onFailure()
                 .retry()
@@ -80,9 +87,8 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
                 .invoke(subscriber -> subscriber.updateVersionedDeployment(this.getId(), this.hashCode()))
                 .onFailure()
                 .invoke(ex -> Log.error("Error providing deployment: " + this.getName() + " to subscriber.", ex))
-                .skip()
-                .where(ignored -> true)
-                .toUni()
+                .collect()
+                .last()
                 .replaceWithVoid();
     }
 
@@ -108,12 +114,10 @@ public abstract class Deployment extends PanacheEntityBase implements Validatabl
                 .build();
     }
 
-
     public abstract Optional<QuartzJob> schedule();
 
-
-
     public abstract ChangeRequest determineChange(Compliance compliance);
+
     public abstract int determineIdeal(Set<Subscriber> subscribers);
 
 }

@@ -2,7 +2,6 @@ package tech.gmork.model.entities.deployment;
 
 
 import io.quarkus.logging.Log;
-import io.smallrye.mutiny.Uni;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
@@ -23,7 +22,6 @@ import tech.gmork.model.helper.QuartzJob;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -46,6 +44,9 @@ public class ByPercentDeployment extends Deployment {
         if (targetPercentage == null) {
             throw new WebApplicationException("Percentage based deployments require a target deployment percentage.",
                     Response.Status.BAD_REQUEST);
+        } else if (targetPercentage < 0) {
+            throw new WebApplicationException("User has specified an invalid target percentage for deployment: "
+                    + this.getName(), Response.Status.BAD_REQUEST);
         }
         if(shouldIncrement) {
             if (initialPercentage == null) {
@@ -138,28 +139,6 @@ public class ByPercentDeployment extends Deployment {
         }
 
         return req;
-    }
-
-    @Override
-    public Uni<Void> deploy() {
-
-        // If target percentage is negative, end the deployment phase immediately
-        if (targetPercentage < 0) {
-            Log.info("User has specified an invalid target percentage for deployment: " + this.getName());
-            return Uni.createFrom().voidItem();
-        }
-
-        // Get the total number of currently connected subscribers, if 0, end the deployment phase immediately
-        var subs = this.getApplication().getSubscribers();
-        if (subs.isEmpty()) {
-            Log.info("No subscribers for application " + this.getApplication().getName() + ", therefore nothing to deploy.");
-            return Uni.createFrom().voidItem();
-        }
-
-        var compliance = determineCompliance(subs);
-        var changeRequest = determineChange(compliance);
-
-        return deploy(changeRequest.getSubscribers());
     }
 
     @Override
